@@ -515,8 +515,8 @@ Scene_Title.prototype.commandNewGame = function() {
 
 Scene_Title.prototype.commandContinue = function() {
     this._commandWindow.close();
-    var savefileId = DataManager.latestSavefileId() - 1;
-    if (savefileId >= 0 && DataManager.loadGame(savefileId)) {
+    var savefileId = DataManager.latestSavefileId();
+    if (savefileId && DataManager.isThisGameFile(savefileId) && DataManager.loadGame(savefileId)) {
         SoundManager.playLoad();
         this.fadeOutAll();
         $gameSystem.onAfterLoad();

@@ -567,8 +567,8 @@ Scene_Gameover.prototype.retryCommand = function() {
 };
 
 Scene_Gameover.prototype.loadCommand = function() {
-    var savefileId = DataManager.latestSavefileId() - 1;
-    if (savefileId >= 0 && DataManager.loadGame(savefileId)) {
+    var savefileId = DataManager.latestSavefileId();
+    if (savefileId && DataManager.isThisGameFile(savefileId) && DataManager.loadGame(savefileId)) {
         SoundManager.playLoad();
         this.fadeOutAll();
         $gameSystem.onAfterLoad();
