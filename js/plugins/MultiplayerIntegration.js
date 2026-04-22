@@ -350,6 +350,8 @@ Game_Player.prototype.locate = function(x, y) {
   _Game_Player_locate.call(this, x, y);
   if ($multiplayer && $multiplayer.isConnected) {
     $multiplayer.movePlayer(this._x, this._y, $gameMap._mapId);
+    clearOtherPlayers();
+    $multiplayer.refreshPlayers($gameMap._mapId);
   }
 };
 
