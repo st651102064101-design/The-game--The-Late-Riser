@@ -38,6 +38,7 @@ app.use(express.json());
 const playerSchema = new mongoose.Schema({
   playerId: String,
   name: String,
+  displayName: String,
   savefileTitle: String,
   savefileId: Number,
   x: Number,
@@ -114,6 +115,7 @@ io.on('connection', (socket) => {
         {
           playerId,
           name: playerName,
+          displayName: playerData.displayName || playerName,
           savefileTitle: playerData.savefileTitle || '',
           savefileId: playerData.savefileId || null,
           x: playerData.x || 0,
@@ -135,6 +137,7 @@ io.on('connection', (socket) => {
       activePlayers.set(playerId, {
         playerId,
         name: playerName,
+        displayName: playerData.displayName || playerName,
         savefileTitle: player.savefileTitle,
         savefileId: player.savefileId,
         x: player.x,
@@ -166,6 +169,7 @@ io.on('connection', (socket) => {
       socket.to(`map:${player.mapId}`).emit('player:spawn', {
         playerId,
         name: playerName,
+        displayName: playerData.displayName || playerName,
         savefileTitle: player.savefileTitle,
         savefileId: player.savefileId,
         x: player.x,
@@ -317,10 +321,15 @@ io.on('connection', (socket) => {
         socket.to(`map:${newMapId}`).emit('player:spawn', {
           playerId,
           name: player.name,
+          displayName: player.displayName || player.name,
+          savefileTitle: player.savefileTitle,
+          savefileId: player.savefileId,
           x,
-          y,          direction: player.direction,
+          y,
+          direction: player.direction,
           characterName: player.characterName,
-          characterIndex: player.characterIndex,          level: player.level
+          characterIndex: player.characterIndex,
+          level: player.level
         });
 
         // Send all players on new map to this player

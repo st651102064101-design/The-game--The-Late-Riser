@@ -86,6 +86,7 @@ class RPGMultiplayer {
         this.socket.emit('player:join', {
             playerId: this.playerId,
             name: this.playerName,
+            displayName: this.playerName,
             savefileTitle: savefileTitle,
             savefileId: savefileId,
             x: this.currentX,

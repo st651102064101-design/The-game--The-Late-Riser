@@ -65,6 +65,7 @@ function initializeMultiplayer(playerName = 'Player') {
         }
       }
       displayName = displayName || playerName || 'Player';
+      localStorage.setItem('playerDisplayName', displayName);
 
       // Create multiplayer instance
       $multiplayer = new RPGMultiplayer(serverUrl);
