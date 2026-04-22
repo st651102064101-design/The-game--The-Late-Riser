@@ -307,6 +307,7 @@ class Game_OtherPlayer extends Game_CharacterBase {
       this.opacity = 255;
       this.y = this._deathOriginY || this.y;
     }
+  }
 
   screenX() {
     const tw = $gameMap.tileWidth();
