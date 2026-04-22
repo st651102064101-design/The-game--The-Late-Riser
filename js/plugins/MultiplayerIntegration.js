@@ -342,3 +342,23 @@ Game_Player.prototype.locate = function(x, y) {
     $multiplayer.movePlayer(this._x, this._y, $gameMap._mapId);
   }
 };
+
+// Sync map transfers
+const _Game_Player_performTransfer = Game_Player.prototype.performTransfer;
+Game_Player.prototype.performTransfer = function() {
+  const transferMapId = this._newMapId;
+  const transferX = this._newX;
+  const transferY = this._newY;
+  const wasTransferring = this.isTransferring();
+  const fromMapId = $gameMap ? $gameMap.mapId() : null;
+
+  _Game_Player_performTransfer.call(this);
+
+  if (wasTransferring && $multiplayer && $multiplayer.isConnected) {
+    if (transferMapId !== fromMapId) {
+      $multiplayer.changeMap(transferMapId, transferX, transferY);
+    } else {
+      $multiplayer.movePlayer(this._x, this._y, transferMapId);
+    }
+  }
+};
