@@ -86,17 +86,47 @@ function initializeMultiplayer(playerName = 'Player') {
 }
 
 /**
+ * Utility for player display names
+ */
+function getPlayerDisplayName(playerData) {
+  return (playerData.savefileTitle && playerData.savefileTitle.trim()) ||
+         (playerData.name && playerData.name.trim()) ||
+         'Player';
+}
+
+function getDirectionFromDelta(dx, dy) {
+  if (dx === 1 && dy === 0) return 6;
+  if (dx === -1 && dy === 0) return 4;
+  if (dx === 0 && dy === 1) return 2;
+  if (dx === 0 && dy === -1) return 8;
+  return 2;
+}
+
+function updateOtherPlayerPosition(playerSprite, x, y, direction) {
+  const dx = x - playerSprite.data.x;
+  const dy = y - playerSprite.data.y;
+  if (!playerSprite.character.isMoving() && Math.abs(dx) + Math.abs(dy) === 1) {
+    const moveDirection = direction || getDirectionFromDelta(dx, dy);
+    playerSprite.character.setDirection(moveDirection);
+    playerSprite.character.moveStraight(moveDirection);
+  } else {
+    playerSprite.character.setDirection(direction || playerSprite.character.direction());
+    playerSprite.character.setPosition(x, y);
+  }
+  playerSprite.data.x = x;
+  playerSprite.data.y = y;
+}
+
+/**
  * When other player spawns
  */
 function onOtherPlayerSpawned(playerData) {
-  // Create character and sprite for other player
   const character = new Game_OtherPlayer(playerData);
   const sprite = new Sprite_Character(character);
-  const nameText = playerData.savefileTitle || playerData.name || 'Player';
+  const nameText = getPlayerDisplayName(playerData);
   const nameTag = new Sprite_NameTag(nameText);
   sprite.addChild(nameTag);
 
-  // Add to scene's spriteset
   if (SceneManager._scene && SceneManager._scene._spriteset && SceneManager._scene._spriteset._characterSprites) {
     SceneManager._scene._spriteset._characterSprites.push(sprite);
     SceneManager._scene._spriteset.addChild(sprite);
@@ -122,14 +152,7 @@ function onOtherPlayerSpawned(playerData) {
 function onOtherPlayerMoved(moveData) {
   if ($otherPlayersSprites[moveData.playerId]) {
     const playerSprite = $otherPlayersSprites[moveData.playerId];
-    playerSprite.data.x = moveData.x;
-    playerSprite.data.y = moveData.y;
-    if (moveData.direction) {
-      playerSprite.character.setDirection(moveData.direction);
-    }
-    if (!playerSprite.character.isMoving()) {
-      playerSprite.character.setPosition(moveData.x, moveData.y);
-    }
+    updateOtherPlayerPosition(playerSprite, moveData.x, moveData.y, moveData.direction);
   }
 }
 
@@ -161,11 +184,10 @@ function onPlayersUpdate(players) {
     if ($otherPlayersSprites[player.playerId]) {
       const entry = $otherPlayersSprites[player.playerId];
       entry.data = player;
-      entry.character.setDirection(player.direction || 2);
       entry.character.setImage(player.characterName || entry.character.characterName(), player.characterIndex || entry.character.characterIndex());
-      entry.character.setPosition(player.x, player.y);
+      updateOtherPlayerPosition(entry, player.x, player.y, player.direction);
       if (entry.nameTag) {
-        entry.nameTag.setName(player.savefileTitle || player.name || 'Player');
+        entry.nameTag.setName(getPlayerDisplayName(player));
       }
     } else {
       onOtherPlayerSpawned(player);
@@ -279,7 +301,7 @@ class Game_OtherPlayer extends Game_CharacterBase {
     this.setImage(characterName, characterIndex);
     this._otherPlayerDeathTimer = 0;
     this._otherPlayerDead = false;
-    this._deathOriginY = this._y;
+    this._deathYOffset = 0;
   }
 
   update() {
@@ -287,8 +309,7 @@ class Game_OtherPlayer extends Game_CharacterBase {
     if (this._otherPlayerDeathTimer > 0) {
       var progress = (30 - this._otherPlayerDeathTimer) / 30;
       this.opacity = 255 - Math.round(progress * 200);
-      this._deathOriginY = this._deathOriginY || this.y;
-      this.y = this._deathOriginY + Math.round(progress * 12);
+      this._deathYOffset = Math.round(progress * 12);
       this._otherPlayerDeathTimer--;
       if (this._otherPlayerDeathTimer === 0) {
         this._otherPlayerDead = true;
@@ -300,15 +321,13 @@ class Game_OtherPlayer extends Game_CharacterBase {
     if (isDead) {
       if (!this._otherPlayerDead && this._otherPlayerDeathTimer <= 0) {
         this._otherPlayerDeathTimer = 30;
-        this._deathOriginY = this.y;
+        this._deathYOffset = 0;
       }
     } else {
       this._otherPlayerDeathTimer = 0;
       this._otherPlayerDead = false;
       this.opacity = 255;
-      if (this._deathOriginY !== undefined) {
-        this.y = this._deathOriginY;
-      }
+      this._deathYOffset = 0;
     }
   }
 
@@ -372,7 +391,14 @@ function refreshOtherPlayersOnMap() {
   }
 }
 
-// Sync player movement
+const _Sprite_Character_updatePosition = Sprite_Character.prototype.updatePosition;
+Sprite_Character.prototype.updatePosition = function() {
+  _Sprite_Character_updatePosition.call(this);
+  if (this._character && typeof this._character._deathYOffset === 'number' && this._character._deathYOffset > 0) {
+    this.y -= this._character._deathYOffset;
+  }
+};
+
 const _Game_Player_moveStraight = Game_Player.prototype.moveStraight;
 Game_Player.prototype.moveStraight = function(d) {
   _Game_Player_moveStraight.call(this, d);
@@ -387,6 +413,23 @@ Game_Player.prototype.setDirection = function(d) {
   _Game_Player_setDirection.call(this, d);
   if ($multiplayer && $multiplayer.isConnected) {
     $multiplayer.sendDirection(d, $gameMap._mapId);
+  }
+};
+
+const _Game_BattlerBase_setHp = Game_BattlerBase.prototype.setHp;
+Game_BattlerBase.prototype.setHp = function(hp) {
+  const previousHp = this.hp;
+  _Game_BattlerBase_setHp.call(this, hp);
+  if ($multiplayer && $multiplayer.isConnected && this.isActor() && $gameParty && $gameParty.leader()) {
+    const leader = $gameParty.leader();
+    if (this.actorId && leader.actorId && this.actorId() === leader.actorId()) {
+      const newHp = this.hp;
+      const newLevel = typeof this.level === 'function' ? this.level() : this.level;
+      const newExp = typeof this.currentExp === 'function' ? this.currentExp() : 0;
+      if (newHp !== previousHp) {
+        syncPlayerStats(newHp, newLevel || 1, newExp || 0);
+      }
+    }
   }
 };
 
