@@ -1,0 +1,20 @@
+[build]
+  # ระบุว่า publish folder คือ www/
+  publish = "www"
+  # ไม่ต้อง build command เพราะเป็น static files
+  command = ""
+
+# ตั้งค่า headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Allow CORS สำหรับเรียก API ถ้ามีในอนาคต
+    Access-Control-Allow-Origin = "*"
+    # Cache policy
+    Cache-Control = "public, max-age=3600"
+
+# Rewrite rules - สำหรับ Single Page App (ถ้าต้อง)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
