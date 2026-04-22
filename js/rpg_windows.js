@@ -517,7 +517,7 @@ Window_Base.prototype.drawActorLevel = function(actor, x, y) {
     this.changeTextColor(this.systemColor());
     this.drawText(TextManager.levelA, x, y, 48);
     this.resetTextColor();
-    this.drawText(actor.level, x + 84, y, 36, 'ขวา');
+    this.drawText(actor.level, x + 84, y, 36, 'right');
 };
 
 Window_Base.prototype.drawActorIcons = function(actor, x, y, width) {
@@ -538,13 +538,13 @@ Window_Base.prototype.drawCurrentAndMax = function(current, max, x, y,
     var x3 = x2 - valueWidth;
     if (x3 >= x + labelWidth) {
         this.changeTextColor(color1);
-        this.drawText(current, x3, y, valueWidth, 'ขวา');
+        this.drawText(current, x3, y, valueWidth, 'right');
         this.changeTextColor(color2);
-        this.drawText('/', x2, y, slashWidth, 'ขวา');
-        this.drawText(max, x1, y, valueWidth, 'ขวา');
+        this.drawText('/', x2, y, slashWidth, 'right');
+        this.drawText(max, x1, y, valueWidth, 'right');
     } else {
         this.changeTextColor(color1);
-        this.drawText(current, x1, y, valueWidth, 'ขวา');
+        this.drawText(current, x1, y, valueWidth, 'right');
     }
 };
 
@@ -578,7 +578,7 @@ Window_Base.prototype.drawActorTp = function(actor, x, y, width) {
     this.changeTextColor(this.systemColor());
     this.drawText(TextManager.tpA, x, y, 44);
     this.changeTextColor(this.tpColor(actor));
-    this.drawText(actor.tp, x + width - 64, y, 64, 'ขวา');
+    this.drawText(actor.tp, x + width - 64, y, 64, 'right');
 };
 
 Window_Base.prototype.drawActorSimpleStatus = function(actor, x, y, width) {
@@ -606,9 +606,9 @@ Window_Base.prototype.drawItemName = function(item, x, y, width) {
 Window_Base.prototype.drawCurrencyValue = function(value, unit, x, y, width) {
     var unitWidth = Math.min(80, this.textWidth(unit));
     this.resetTextColor();
-    this.drawText(value, x, y, width - unitWidth - 6, 'ขวา');
+    this.drawText(value, x, y, width - unitWidth - 6, 'right');
     this.changeTextColor(this.systemColor());
-    this.drawText(unit, x + width - unitWidth, y, unitWidth, 'ขวา');
+    this.drawText(unit, x + width - unitWidth, y, unitWidth, 'right');
 };
 
 Window_Base.prototype.paramchangeTextColor = function(change) {
