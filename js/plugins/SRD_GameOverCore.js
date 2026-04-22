@@ -567,14 +567,20 @@ Scene_Gameover.prototype.retryCommand = function() {
 };
 
 Scene_Gameover.prototype.loadCommand = function() {
-	if(Imported.YEP_SaveCore) {
-		$gameTemp._forceSceneLoadBackBlack = true;
-		SceneManager.push(Scene_Load);
-	} else {
-		this._helpWindow.open();
-		this._listWindow.activate();
-		this._listWindow.open();
-	}
+    var savefileId = DataManager.latestSavefileId() - 1;
+    if (savefileId >= 0 && DataManager.loadGame(savefileId)) {
+        SoundManager.playLoad();
+        this.fadeOutAll();
+        $gameSystem.onAfterLoad();
+        SceneManager.goto(Scene_Map);
+    } else if (Imported.YEP_SaveCore) {
+        $gameTemp._forceSceneLoadBackBlack = true;
+        SceneManager.push(Scene_Load);
+    } else {
+        this._helpWindow.open();
+        this._listWindow.activate();
+        this._listWindow.open();
+    }
 };
 
 Scene_Gameover.prototype.cancelLoad = function() {
