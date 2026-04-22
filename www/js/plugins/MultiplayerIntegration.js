@@ -216,3 +216,24 @@ class Game_OtherPlayer extends Game_CharacterBase {
     return Math.round($gameMap.adjustY(this._y) * th + th / 2);
   }
 }
+
+// Hook into Scene_Map to initialize multiplayer
+const _Scene_Map_start = Scene_Map.prototype.start;
+Scene_Map.prototype.start = function() {
+  _Scene_Map_start.call(this);
+  
+  // Initialize multiplayer when entering map
+  if (!$multiplayer || !$multiplayer.isConnected) {
+    initializeMultiplayer($gameParty.leader().name() || 'Player')
+      .catch(error => console.error('Multiplayer init error:', error));
+  }
+};
+
+// Sync player movement
+const _Game_Player_moveStraight = Game_Player.prototype.moveStraight;
+Game_Player.prototype.moveStraight = function(d) {
+  _Game_Player_moveStraight.call(this, d);
+  if ($multiplayer && $multiplayer.isConnected) {
+    $multiplayer.movePlayer(this._x, this._y, $gameMap._mapId);
+  }
+};
