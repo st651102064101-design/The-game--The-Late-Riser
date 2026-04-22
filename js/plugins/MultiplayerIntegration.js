@@ -306,8 +306,7 @@ Scene_Map.prototype.start = function() {
     initializeMultiplayer($gameParty.leader().name() || 'Player')
       .catch(error => console.error('Multiplayer init error:', error));
   } else {
-    clearOtherPlayers();
-    $multiplayer.refreshPlayers($gameMap._mapId);
+    refreshOtherPlayersOnMap();
   }
 };
 
