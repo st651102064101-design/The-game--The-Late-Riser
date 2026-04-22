@@ -20,7 +20,7 @@ function initializeMultiplayer(playerName = 'Player') {
   return new Promise((resolve, reject) => {
     try {
       // Get server URL (use Netlify environment variable if available)
-      const serverUrl = window.MULTIPLAYER_SERVER_URL || 'http://localhost:3000';
+      const serverUrl = 'https://the-game-the-late-riser-production.up.railway.app';
       
       // Generate unique player ID
       const playerId = localStorage.getItem('playerId') || generateUUID();
