@@ -55,6 +55,17 @@ function initializeMultiplayer(playerName = 'Player') {
       const playerId = localStorage.getItem('playerId') || generateUUID();
       localStorage.setItem('playerId', playerId);
 
+      // Derive display name from saved data first
+      let displayName = localStorage.getItem('playerDisplayName') || '';
+      if (!displayName && typeof DataManager !== 'undefined') {
+        const savefileId = typeof DataManager.lastAccessedSavefileId === 'function' ? DataManager.lastAccessedSavefileId() : null;
+        if (savefileId !== null && savefileId >= 0) {
+          const saveInfo = DataManager.loadSavefileInfo(savefileId);
+          displayName = saveInfo && saveInfo.title ? saveInfo.title : '';
+        }
+      }
+      displayName = displayName || playerName || 'Player';
+
       // Create multiplayer instance
       $multiplayer = new RPGMultiplayer(serverUrl);
 
@@ -89,7 +100,8 @@ function initializeMultiplayer(playerName = 'Player') {
  * Utility for player display names
  */
 function getPlayerDisplayName(playerData) {
-  return (playerData.savefileTitle && playerData.savefileTitle.trim()) ||
+  return (playerData.displayName && playerData.displayName.trim()) ||
+         (playerData.savefileTitle && playerData.savefileTitle.trim()) ||
          (playerData.name && playerData.name.trim()) ||
          'Player';
 }
@@ -105,11 +117,14 @@ function getDirectionFromDelta(dx, dy) {
 function updateOtherPlayerPosition(playerSprite, x, y, direction) {
   const dx = x - playerSprite.data.x;
   const dy = y - playerSprite.data.y;
-  if (!playerSprite.character.isMoving() && Math.abs(dx) + Math.abs(dy) === 1) {
-    const moveDirection = direction || getDirectionFromDelta(dx, dy);
-    playerSprite.character.setDirection(moveDirection);
-    playerSprite.character.moveStraight(moveDirection);
+  if (dx === 0 && dy === 0) {
+    if (direction) {
+      playerSprite.character.setDirection(direction);
+    }
+  } else if (Math.abs(dx) + Math.abs(dy) === 1) {
+    playerSprite.character.enqueueMove(x, y, direction);
   } else {
+    playerSprite.character._moveQueue = [];
     playerSprite.character.setDirection(direction || playerSprite.character.direction());
     playerSprite.character.setPosition(x, y);
   }
@@ -302,10 +317,36 @@ class Game_OtherPlayer extends Game_CharacterBase {
     this._otherPlayerDeathTimer = 0;
     this._otherPlayerDead = false;
     this._deathYOffset = 0;
+    this._moveQueue = [];
+  }
+
+  enqueueMove(x, y, direction) {
+    const dx = x - this._x;
+    const dy = y - this._y;
+    const moveDirection = direction || getDirectionFromDelta(dx, dy);
+    if (!this.isMoving() && Math.abs(dx) + Math.abs(dy) === 1) {
+      this.setDirection(moveDirection);
+      this.moveStraight(moveDirection);
+    } else {
+      this._moveQueue.push({ x, y, direction: moveDirection });
+    }
   }
 
   update() {
     super.update();
+    if (!this.isMoving() && this._moveQueue.length > 0) {
+      const nextMove = this._moveQueue.shift();
+      const dx = nextMove.x - this._x;
+      const dy = nextMove.y - this._y;
+      const moveDirection = nextMove.direction || getDirectionFromDelta(dx, dy);
+      if (Math.abs(dx) + Math.abs(dy) === 1) {
+        this.setDirection(moveDirection);
+        this.moveStraight(moveDirection);
+      } else {
+        this.setDirection(moveDirection);
+        this.setPosition(nextMove.x, nextMove.y);
+      }
+    }
     if (this._otherPlayerDeathTimer > 0) {
       var progress = (30 - this._otherPlayerDeathTimer) / 30;
       this.opacity = 255 - Math.round(progress * 200);
@@ -322,6 +363,9 @@ class Game_OtherPlayer extends Game_CharacterBase {
       if (!this._otherPlayerDead && this._otherPlayerDeathTimer <= 0) {
         this._otherPlayerDeathTimer = 30;
         this._deathYOffset = 0;
+        if (typeof this.requestAnimation === 'function') {
+          this.requestAnimation(1);
+        }
       }
     } else {
       this._otherPlayerDeathTimer = 0;
