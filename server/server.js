@@ -212,6 +212,41 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ===== PLAYER DIRECTION =====
+  socket.on('player:direction', async (directionData) => {
+    try {
+      const { playerId, direction, mapId } = directionData;
+
+      if (activePlayers.has(playerId)) {
+        const player = activePlayers.get(playerId);
+        player.direction = direction;
+
+        await Player.updateOne(
+          { playerId },
+          { direction, lastActive: new Date() }
+        );
+
+        io.to(`map:${mapId}`).emit('player:direction', {
+          playerId,
+          direction
+        });
+      }
+    } catch (error) {
+      console.error('Error on player:direction:', error);
+    }
+  });
+
+  // ===== PLAYER LIST REQUEST =====
+  socket.on('request:players', async (data) => {
+    try {
+      const { mapId } = data;
+      const players = Array.from(activePlayers.values()).filter(p => p.mapId === mapId);
+      socket.emit('players:update', players);
+    } catch (error) {
+      console.error('Error on request:players:', error);
+    }
+  });
+
   // ===== PLAYER STATS UPDATE =====
   socket.on('player:update-stats', async (statsData) => {
     try {

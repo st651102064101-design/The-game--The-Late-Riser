@@ -249,6 +249,21 @@ class RPGMultiplayer {
   }
 
   /**
+   * Send direction (turning) update
+   */
+  sendDirection(direction, mapId = null) {
+    if (!this.isConnected) return;
+
+    const map = mapId || this.currentMapId;
+    this.currentDirection = direction;
+    this.socket.emit('player:direction', {
+      playerId: this.playerId,
+      direction,
+      mapId: map
+    });
+  }
+
+  /**
    * Change map
    */
   changeMap(newMapId, x = 0, y = 0) {
@@ -261,6 +276,14 @@ class RPGMultiplayer {
       x,
       y
     });
+  }
+
+  /**
+   * Request current players for a map
+   */
+  refreshPlayers(mapId) {
+    if (!this.isConnected) return;
+    this.socket.emit('request:players', { mapId });
   }
 
   /**

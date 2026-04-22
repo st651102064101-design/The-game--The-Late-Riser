@@ -92,10 +92,14 @@ function onOtherPlayerSpawned(playerData) {
 function onOtherPlayerMoved(moveData) {
   if ($otherPlayersSprites[moveData.playerId]) {
     const playerSprite = $otherPlayersSprites[moveData.playerId];
-    playerSprite.character._x = moveData.x;
-    playerSprite.character._y = moveData.y;
     playerSprite.data.x = moveData.x;
     playerSprite.data.y = moveData.y;
+    if (moveData.direction) {
+      playerSprite.character.setDirection(moveData.direction);
+    }
+    if (!playerSprite.character.isMoving()) {
+      playerSprite.character.setPosition(moveData.x, moveData.y);
+    }
   }
 }
 
@@ -124,8 +128,13 @@ function onOtherPlayerDespawned(data) {
  */
 function onPlayersUpdate(players) {
   players.forEach(player => {
-    // Only spawn if not already exists
-    if (!$otherPlayersSprites[player.playerId]) {
+    if ($otherPlayersSprites[player.playerId]) {
+      const entry = $otherPlayersSprites[player.playerId];
+      entry.data = player;
+      entry.character.setDirection(player.direction || 2);
+      entry.character.setImage(player.characterName || entry.character.characterName(), player.characterIndex || entry.character.characterIndex());
+      entry.character.setPosition(player.x, player.y);
+    } else {
       onOtherPlayerSpawned(player);
     }
   });
@@ -254,13 +263,49 @@ Scene_Map.prototype.start = function() {
   if (!$multiplayer || !$multiplayer.isConnected) {
     initializeMultiplayer($gameParty.leader().name() || 'Player')
       .catch(error => console.error('Multiplayer init error:', error));
+  } else {
+    clearOtherPlayers();
+    $multiplayer.refreshPlayers($gameMap._mapId);
   }
 };
+
+function clearOtherPlayers() {
+  Object.values($otherPlayersSprites).forEach(entry => {
+    if (SceneManager._scene && SceneManager._scene._spriteset && SceneManager._scene._spriteset._characterSprites) {
+      const index = SceneManager._scene._spriteset._characterSprites.indexOf(entry.sprite);
+      if (index > -1) {
+        SceneManager._scene._spriteset._characterSprites.splice(index, 1);
+      }
+      if (entry.sprite && SceneManager._scene._spriteset.contains(entry.sprite)) {
+        SceneManager._scene._spriteset.removeChild(entry.sprite);
+      }
+    }
+  });
+  $otherPlayersSprites = {};
+}
 
 // Sync player movement
 const _Game_Player_moveStraight = Game_Player.prototype.moveStraight;
 Game_Player.prototype.moveStraight = function(d) {
   _Game_Player_moveStraight.call(this, d);
+  if ($multiplayer && $multiplayer.isConnected) {
+    $multiplayer.movePlayer(this._x, this._y, $gameMap._mapId);
+  }
+};
+
+// Sync player direction changes
+const _Game_Player_setDirection = Game_Player.prototype.setDirection;
+Game_Player.prototype.setDirection = function(d) {
+  _Game_Player_setDirection.call(this, d);
+  if ($multiplayer && $multiplayer.isConnected) {
+    $multiplayer.sendDirection(d, $gameMap._mapId);
+  }
+};
+
+// Sync player teleport/respawn
+const _Game_Player_locate = Game_Player.prototype.locate;
+Game_Player.prototype.locate = function(x, y) {
+  _Game_Player_locate.call(this, x, y);
   if ($multiplayer && $multiplayer.isConnected) {
     $multiplayer.movePlayer(this._x, this._y, $gameMap._mapId);
   }
