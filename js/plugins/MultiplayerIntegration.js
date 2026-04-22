@@ -276,8 +276,8 @@ function clearOtherPlayers() {
       if (index > -1) {
         SceneManager._scene._spriteset._characterSprites.splice(index, 1);
       }
-      if (entry.sprite && SceneManager._scene._spriteset.contains(entry.sprite)) {
-        SceneManager._scene._spriteset.removeChild(entry.sprite);
+      if (entry.sprite && entry.sprite.parent) {
+        entry.sprite.parent.removeChild(entry.sprite);
       }
     }
   });
