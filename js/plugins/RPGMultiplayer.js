@@ -10,6 +10,9 @@ class RPGMultiplayer {
     this.playerId = null;
     this.playerName = null;
     this.currentMapId = 'Map001';
+    this.currentX = 0;
+    this.currentY = 0;
+    this.currentDirection = 2;
     this.activePlayers = new Map();
     this.isConnected = false;
 
@@ -67,11 +70,21 @@ class RPGMultiplayer {
           if (this.onConnectionChange) this.onConnectionChange(true);
           
           // Emit player join
-          this.socket.emit('player:join', {
+          const playerCharacterName = $gamePlayer.characterName ? $gamePlayer.characterName() : '';
+        const playerCharacterIndex = $gamePlayer.characterIndex ? $gamePlayer.characterIndex() : 0;
+        const defaultDirection = $gamePlayer.direction ? $gamePlayer.direction() : 2;
+        this.currentX = $gamePlayer._x || 0;
+        this.currentY = $gamePlayer._y || 0;
+        this.currentDirection = defaultDirection;
+
+        this.socket.emit('player:join', {
             playerId: this.playerId,
             name: this.playerName,
-            x: 0,
-            y: 0,
+            x: this.currentX,
+            y: this.currentY,
+            direction: defaultDirection,
+            characterName: playerCharacterName,
+            characterIndex: playerCharacterIndex,
             mapId: this.currentMapId,
             level: 1,
             hp: 100,
@@ -100,13 +113,46 @@ class RPGMultiplayer {
           if (this.onPlayerSpawned) this.onPlayerSpawned(playerData);
         });
 
+        this.socket.on('player:direction', (data) => {
+          const player = this.activePlayers.get(data.playerId);
+          if (player) {
+            player.direction = data.direction;
+            if (player.character) {
+              player.character.setDirection(data.direction);
+            }
+            if (this.onPlayerDirectionChanged) {
+              this.onPlayerDirectionChanged(data);
+            }
+          }
+        });
+
         this.socket.on('player:moved', (moveData) => {
-          const { playerId, x, y } = moveData;
+          const { playerId, x, y, direction } = moveData;
           if (this.activePlayers.has(playerId)) {
             const player = this.activePlayers.get(playerId);
+            const oldX = player.x;
+            const oldY = player.y;
             player.x = x;
             player.y = y;
+            player.direction = direction || player.direction;
+
             if (this.onPlayerMoved) this.onPlayerMoved(moveData);
+
+            if (player.character) {
+              const dx = x - oldX;
+              const dy = y - oldY;
+              const moveDir = dx === 1 ? 6 : dx === -1 ? 4 : dy === 1 ? 2 : dy === -1 ? 8 : direction;
+              if (Math.abs(dx) + Math.abs(dy) === 1) {
+                player.character.moveStraight(moveDir);
+                if (!player.character.isMoving()) {
+                  player.character.setDirection(direction);
+                  player.character.setPosition(x, y);
+                }
+              } else {
+                player.character.setDirection(direction);
+                player.character.setPosition(x, y);
+              }
+            }
           }
         });
 
@@ -164,12 +210,26 @@ class RPGMultiplayer {
    */
   movePlayer(x, y, mapId = null) {
     if (!this.isConnected) return;
-    
+
     const map = mapId || this.currentMapId;
+    const dx = x - this.currentX;
+    const dy = y - this.currentY;
+    let direction = this.currentDirection;
+
+    if (dx === 1 && dy === 0) direction = 6;
+    else if (dx === -1 && dy === 0) direction = 4;
+    else if (dy === 1 && dx === 0) direction = 2;
+    else if (dy === -1 && dx === 0) direction = 8;
+
+    this.currentX = x;
+    this.currentY = y;
+    this.currentDirection = direction;
+
     this.socket.emit('player:move', {
       playerId: this.playerId,
       x,
       y,
+      direction,
       mapId: map
     });
   }

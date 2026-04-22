@@ -72,7 +72,11 @@ function onOtherPlayerSpawned(playerData) {
     SceneManager._scene._spriteset._characterSprites.push(sprite);
     SceneManager._scene._spriteset.addChild(sprite);
   }
-  
+
+  character.setDirection(playerData.direction || 2);
+  playerData.character = character;
+  playerData.sprite = sprite;
+
   $otherPlayersSprites[playerData.playerId] = {
     sprite: sprite,
     character: character,
@@ -221,8 +225,8 @@ class Game_OtherPlayer extends Game_CharacterBase {
     this._level = playerData.level;
     this._hp = playerData.hp;
     this._maxHp = playerData.maxHp;
-    const characterName = $gamePlayer ? $gamePlayer.characterName() : '';
-    const characterIndex = $gamePlayer ? $gamePlayer.characterIndex() : 0;
+    const characterName = playerData.characterName || ($gamePlayer ? $gamePlayer.characterName() : '');
+    const characterIndex = playerData.characterIndex || ($gamePlayer ? $gamePlayer.characterIndex() : 0);
     this.setImage(characterName, characterIndex);
   }
 
