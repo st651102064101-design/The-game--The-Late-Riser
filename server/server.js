@@ -12,9 +12,11 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_ORIGIN || "http://localhost:5000",
-    methods: ["GET", "POST"]
-  }
+    origin: process.env.CLIENT_ORIGIN || "https://tranquil-melba-77872b.netlify.app",
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
 });
 
 // Middleware
