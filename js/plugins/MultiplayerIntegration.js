@@ -79,7 +79,7 @@ function initializeMultiplayer(playerName = 'Player') {
       $multiplayer.onConnectionChange = onConnectionChange;
 
       // Connect to server
-      $multiplayer.connect(playerId, playerName, $gameMap._mapId)
+      $multiplayer.connect(playerId, displayName, $gameMap._mapId)
         .then(data => {
           console.log('✅ Multiplayer initialized');
           resolve(data);
