@@ -337,15 +337,23 @@ io.on('connection', (socket) => {
 
 // ==================== DATABASE CONNECTION ====================
 const connectDB = async () => {
+  const mongoUri = process.env.MONGODB_URI;
+
   try {
-    if (process.env.MONGODB_URI) {
-      await mongoose.connect(process.env.MONGODB_URI);
-      console.log('✅ Connected to MongoDB');
-    } else {
-      console.log('⚠️  MONGODB_URI not set - running without database persistence');
+    if (!mongoUri) {
+      console.error('❌ MONGODB_URI is not set. Please configure the database URL in Railway variables.');
+      return;
     }
+
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+    });
+
+    console.log('✅ Connected to MongoDB');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('❌ MongoDB connection error:', error.message || error);
+    console.error('👀 MongoDB URI:', mongoUri ? '[SET]' : '[NOT SET]');
     // Continue running even if DB fails (in-memory mode)
   }
 };
