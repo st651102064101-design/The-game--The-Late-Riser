@@ -1,0 +1,1 @@
+Unpack this into your game project's /img/ folder.
