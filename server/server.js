@@ -10,9 +10,19 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+
+// Parse allowed origins
+const clientOrigins = process.env.CLIENT_ORIGIN 
+  ? process.env.CLIENT_ORIGIN.split(',').map(url => url.trim())
+  : [
+      "https://tranquil-melba-77872b.netlify.app",
+      "http://localhost:5000",
+      "http://localhost:3000"
+    ];
+
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_ORIGIN || "https://tranquil-melba-77872b.netlify.app",
+    origin: clientOrigins,
     methods: ["GET", "POST"],
     credentials: true
   },
