@@ -219,7 +219,12 @@ class RPGMultiplayer {
   }
 }
 
-// Export for use in game
+// Make class globally available in browser
+if (typeof window !== 'undefined') {
+  window.RPGMultiplayer = RPGMultiplayer;
+}
+
+// Also export for Node.js/CommonJS
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = RPGMultiplayer;
 }

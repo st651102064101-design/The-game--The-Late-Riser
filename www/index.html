@@ -14,22 +14,27 @@
         <!-- Socket.io for Multiplayer -->
         <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
         
-        <!-- Multiplayer Scripts -->
-        <script type="text/javascript" src="js/plugins/RPGMultiplayer.js"></script>
-        <script type="text/javascript" src="js/plugins/MultiplayerIntegration.js"></script>
-
+        <!-- Core RPG Maker Libraries -->
         <script type="text/javascript" src="js/libs/pixi.js"></script>
         <script type="text/javascript" src="js/libs/pixi-tilemap.js"></script>
         <script type="text/javascript" src="js/libs/pixi-picture.js"></script>
         <script type="text/javascript" src="js/libs/fpsmeter.js"></script>
         <script type="text/javascript" src="js/libs/lz-string.js"></script>
         <script type="text/javascript" src="js/libs/iphone-inline-video.browser.js"></script>
+        
+        <!-- Core RPG Maker Files (must load in order) -->
         <script type="text/javascript" src="js/rpg_core.js"></script>
         <script type="text/javascript" src="js/rpg_managers.js"></script>
         <script type="text/javascript" src="js/rpg_objects.js"></script>
         <script type="text/javascript" src="js/rpg_scenes.js"></script>
         <script type="text/javascript" src="js/rpg_sprites.js"></script>
         <script type="text/javascript" src="js/rpg_windows.js"></script>
+        
+        <!-- Multiplayer Scripts (after RPG objects are loaded) -->
+        <script type="text/javascript" src="js/plugins/RPGMultiplayer.js"></script>
+        <script type="text/javascript" src="js/plugins/MultiplayerIntegration.js"></script>
+        
+        <!-- Game Plugins and Main -->
         <script type="text/javascript" src="js/plugins.js"></script>
         <script type="text/javascript" src="js/main.js"></script>
     </body>
