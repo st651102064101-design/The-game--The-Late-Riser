@@ -187,15 +187,22 @@ function onChatMessageReceived(chatData) {
  */
 function onOtherPlayerStatsChanged(statsData) {
   if ($otherPlayersSprites[statsData.playerId]) {
-    const playerData = $otherPlayersSprites[statsData.playerId].data;
-    const character = $otherPlayersSprites[statsData.playerId].character;
+    const entry = $otherPlayersSprites[statsData.playerId];
+    const playerData = entry.data;
+    const character = entry.character;
     
+    const previousHp = playerData.hp;
     playerData.hp = statsData.hp;
     playerData.level = statsData.level;
     
     if (character) {
       character._hp = statsData.hp;
       character._level = statsData.level;
+      if (statsData.hp <= 0 && previousHp > 0) {
+        character.setOtherPlayerDeath(true);
+      } else if (statsData.hp > 0 && previousHp <= 0) {
+        character.setOtherPlayerDeath(false);
+      }
     }
   }
 }
