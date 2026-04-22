@@ -38,6 +38,8 @@ app.use(express.json());
 const playerSchema = new mongoose.Schema({
   playerId: String,
   name: String,
+  savefileTitle: String,
+  savefileId: Number,
   x: Number,
   y: Number,
   direction: Number,
@@ -112,6 +114,8 @@ io.on('connection', (socket) => {
         {
           playerId,
           name: playerName,
+          savefileTitle: playerData.savefileTitle || '',
+          savefileId: playerData.savefileId || null,
           x: playerData.x || 0,
           y: playerData.y || 0,
           direction: playerData.direction || 2,
@@ -131,6 +135,8 @@ io.on('connection', (socket) => {
       activePlayers.set(playerId, {
         playerId,
         name: playerName,
+        savefileTitle: player.savefileTitle,
+        savefileId: player.savefileId,
         x: player.x,
         y: player.y,
         direction: player.direction,
@@ -160,6 +166,8 @@ io.on('connection', (socket) => {
       socket.to(`map:${player.mapId}`).emit('player:spawn', {
         playerId,
         name: playerName,
+        savefileTitle: player.savefileTitle,
+        savefileId: player.savefileId,
         x: player.x,
         y: player.y,
         direction: player.direction,

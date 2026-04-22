@@ -92,7 +92,8 @@ function onOtherPlayerSpawned(playerData) {
   // Create character and sprite for other player
   const character = new Game_OtherPlayer(playerData);
   const sprite = new Sprite_Character(character);
-  const nameTag = new Sprite_NameTag(playerData.name || 'Player');
+  const nameText = playerData.savefileTitle || playerData.name || 'Player';
+  const nameTag = new Sprite_NameTag(nameText);
   sprite.addChild(nameTag);
 
   // Add to scene's spriteset
@@ -164,7 +165,7 @@ function onPlayersUpdate(players) {
       entry.character.setImage(player.characterName || entry.character.characterName(), player.characterIndex || entry.character.characterIndex());
       entry.character.setPosition(player.x, player.y);
       if (entry.nameTag) {
-        entry.nameTag.setName(player.name || 'Player');
+        entry.nameTag.setName(player.savefileTitle || player.name || 'Player');
       }
     } else {
       onOtherPlayerSpawned(player);

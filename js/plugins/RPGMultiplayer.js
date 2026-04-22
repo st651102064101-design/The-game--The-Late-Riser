@@ -77,9 +77,17 @@ class RPGMultiplayer {
         this.currentY = $gamePlayer._y || 0;
         this.currentDirection = defaultDirection;
 
+        var savefileId = (typeof DataManager !== 'undefined' && DataManager.lastAccessedSavefileId) ? DataManager.lastAccessedSavefileId() : null;
+        var savefileTitle = '';
+        if (typeof DataManager !== 'undefined' && savefileId !== null && savefileId >= 0) {
+          var saveInfo = DataManager.loadSavefileInfo(savefileId);
+          savefileTitle = saveInfo ? saveInfo.title : `Save ${savefileId}`;
+        }
         this.socket.emit('player:join', {
             playerId: this.playerId,
             name: this.playerName,
+            savefileTitle: savefileTitle,
+            savefileId: savefileId,
             x: this.currentX,
             y: this.currentY,
             direction: defaultDirection,
