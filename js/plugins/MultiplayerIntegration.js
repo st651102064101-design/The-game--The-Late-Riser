@@ -16,6 +16,32 @@ let $multiplayer = null;
 // Create window to hold other players' sprites
 let $otherPlayersSprites = {};
 
+class Sprite_NameTag extends Sprite_Base {
+  constructor(name) {
+    super();
+    const width = 128;
+    const height = 24;
+    this.bitmap = new Bitmap(width, height);
+    this.bitmap.fontSize = 16;
+    this.bitmap.textColor = '#ffffff';
+    this.bitmap.outlineColor = '#000000';
+    this.bitmap.outlineWidth = 4;
+    this.anchor.x = 0.5;
+    this.anchor.y = 1;
+    this.y = -48;
+    this.setName(name);
+  }
+
+  setName(name) {
+    if (this._name === name) {
+      return;
+    }
+    this._name = name;
+    this.bitmap.clear();
+    this.bitmap.drawText(name, 0, 0, this.bitmap.width, this.bitmap.height, 'center');
+  }
+}
+
 /**
  * Initialize multiplayer system
  */
@@ -66,9 +92,11 @@ function onOtherPlayerSpawned(playerData) {
   // Create character and sprite for other player
   const character = new Game_OtherPlayer(playerData);
   const sprite = new Sprite_Character(character);
-  
+  const nameTag = new Sprite_NameTag(playerData.name || 'Player');
+  sprite.addChild(nameTag);
+
   // Add to scene's spriteset
-  if (SceneManager._scene._spriteset && SceneManager._scene._spriteset._characterSprites) {
+  if (SceneManager._scene && SceneManager._scene._spriteset && SceneManager._scene._spriteset._characterSprites) {
     SceneManager._scene._spriteset._characterSprites.push(sprite);
     SceneManager._scene._spriteset.addChild(sprite);
   }
@@ -76,6 +104,7 @@ function onOtherPlayerSpawned(playerData) {
   character.setDirection(playerData.direction || 2);
   playerData.character = character;
   playerData.sprite = sprite;
+  playerData.nameTag = nameTag;
 
   $otherPlayersSprites[playerData.playerId] = {
     sprite: sprite,
@@ -134,6 +163,9 @@ function onPlayersUpdate(players) {
       entry.character.setDirection(player.direction || 2);
       entry.character.setImage(player.characterName || entry.character.characterName(), player.characterIndex || entry.character.characterIndex());
       entry.character.setPosition(player.x, player.y);
+      if (entry.nameTag) {
+        entry.nameTag.setName(player.name || 'Player');
+      }
     } else {
       onOtherPlayerSpawned(player);
     }
