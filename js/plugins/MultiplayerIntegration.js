@@ -326,6 +326,17 @@ function clearOtherPlayers() {
   $otherPlayersSprites = {};
 }
 
+function refreshOtherPlayersOnMap() {
+  if ($multiplayer && $multiplayer.isConnected) {
+    clearOtherPlayers();
+    setTimeout(() => {
+      if ($multiplayer && $multiplayer.isConnected) {
+        $multiplayer.refreshPlayers($gameMap._mapId);
+      }
+    }, 1);
+  }
+}
+
 // Sync player movement
 const _Game_Player_moveStraight = Game_Player.prototype.moveStraight;
 Game_Player.prototype.moveStraight = function(d) {
@@ -350,8 +361,7 @@ Game_Player.prototype.locate = function(x, y) {
   _Game_Player_locate.call(this, x, y);
   if ($multiplayer && $multiplayer.isConnected) {
     $multiplayer.movePlayer(this._x, this._y, $gameMap._mapId);
-    clearOtherPlayers();
-    $multiplayer.refreshPlayers($gameMap._mapId);
+    refreshOtherPlayersOnMap();
   }
 };
 
