@@ -221,7 +221,9 @@ class Game_OtherPlayer extends Game_CharacterBase {
     this._level = playerData.level;
     this._hp = playerData.hp;
     this._maxHp = playerData.maxHp;
-    this.setImage('', 0);
+    const characterName = $gamePlayer ? $gamePlayer.characterName() : '';
+    const characterIndex = $gamePlayer ? $gamePlayer.characterIndex() : 0;
+    this.setImage(characterName, characterIndex);
   }
 
   update() {
