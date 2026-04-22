@@ -41,16 +41,28 @@ class RPGMultiplayer {
         this.playerName = playerName;
         this.currentMapId = initialMapId;
 
-        // Create socket connection
+        // Connection timeout - resolve with offline mode if timeout
+        const connectionTimeout = setTimeout(() => {
+          if (this.socket && !this.isConnected) {
+            console.warn('⚠️ Multiplayer: Connection timeout - running in offline mode');
+            this.socket.disconnect();
+            this.isConnected = false;
+            resolve({ offlineMode: true, message: 'Playing in offline mode' });
+          }
+        }, 5000);
+
+        // Create socket connection with error suppression
         this.socket = io(this.serverUrl, {
           reconnectionDelay: 1000,
           reconnectionDelayMax: 5000,
-          reconnectionAttempts: 5
+          reconnectionAttempts: 3,
+          reconnection: false // Disable auto-reconnect to prevent spam
         });
 
         // Connection events
         this.socket.on('connect', () => {
-          console.log('✅ Connected to server');
+          clearTimeout(connectionTimeout);
+          console.log('✅ Connected to multiplayer server');
           this.isConnected = true;
           if (this.onConnectionChange) this.onConnectionChange(true);
           
@@ -69,7 +81,8 @@ class RPGMultiplayer {
         });
 
         this.socket.on('player:joined', (data) => {
-          console.log('✅ Player joined:', data.name);
+          clearTimeout(connectionTimeout);
+          console.log('✅ Player joined multiplayer');
           if (this.onPlayerJoined) this.onPlayerJoined(data);
           resolve(data);
         });
@@ -119,14 +132,24 @@ class RPGMultiplayer {
         });
 
         this.socket.on('disconnect', () => {
-          console.log('❌ Disconnected from server');
+          console.log('ℹ️ Disconnected from multiplayer');
           this.isConnected = false;
           if (this.onConnectionChange) this.onConnectionChange(false);
         });
 
+        // Handle connection errors gracefully
+        this.socket.on('connect_error', (error) => {
+          console.warn('⚠️ Multiplayer connection error - continuing in offline mode');
+          clearTimeout(connectionTimeout);
+          this.isConnected = false;
+          resolve({ offlineMode: true, message: 'Playing in offline mode' });
+        });
+
         this.socket.on('error', (error) => {
-          console.error('⚠️ Socket error:', error);
-          reject(error);
+          console.warn('⚠️ Multiplayer error - offline mode enabled');
+          clearTimeout(connectionTimeout);
+          this.isConnected = false;
+          resolve({ offlineMode: true, message: 'Playing in offline mode' });
         });
 
       } catch (error) {

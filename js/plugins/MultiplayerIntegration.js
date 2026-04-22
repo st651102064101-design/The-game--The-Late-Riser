@@ -45,12 +45,13 @@ function initializeMultiplayer(playerName = 'Player') {
           resolve(data);
         })
         .catch(error => {
-          console.error('❌ Failed to initialize multiplayer:', error);
-          reject(error);
+          console.warn('ℹ️ Multiplayer unavailable:', error?.message || error);
+          resolve({ offlineMode: true, message: 'Playing in offline mode' });
         });
 
     } catch (error) {
-      reject(error);
+      console.warn('ℹ️ Multiplayer error:', error?.message || error);
+      resolve({ offlineMode: true, message: 'Playing in offline mode' });
     }
   });
 }

@@ -11,6 +11,21 @@
         <title></title>
     </head>
     <body style="background-color: black">
+        <!-- Suppress multiplayer connection errors -->
+        <script>
+            // Suppress Socket.io CORS and network errors from console
+            const originalError = console.error;
+            console.error = function(...args) {
+                const errorStr = args[0]?.toString() || '';
+                // Filter out socket.io CORS and connection errors
+                if (errorStr.includes('CORS') || errorStr.includes('socket.io') || errorStr.includes('net::ERR_FAILED') || errorStr.includes('502')) {
+                    console.warn('ℹ️ Multiplayer unavailable - playing in offline mode');
+                    return;
+                }
+                originalError.apply(console, args);
+            };
+        </script>
+
         <!-- Socket.io for Multiplayer -->
         <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
         
