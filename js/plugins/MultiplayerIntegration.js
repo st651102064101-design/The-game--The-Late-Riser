@@ -270,11 +270,36 @@ class Game_OtherPlayer extends Game_CharacterBase {
     const characterName = playerData.characterName || ($gamePlayer ? $gamePlayer.characterName() : '');
     const characterIndex = playerData.characterIndex || ($gamePlayer ? $gamePlayer.characterIndex() : 0);
     this.setImage(characterName, characterIndex);
-  }
+  this._otherPlayerDeathTimer = 0;
+  this._otherPlayerDead = false;
+  this._deathOriginY = 0;
+}
 
   update() {
     super.update();
+    if (this._otherPlayerDeathTimer > 0) {
+      var progress = (30 - this._otherPlayerDeathTimer) / 30;
+      this.opacity = 255 - Math.round(progress * 200);
+      this.y = this._deathOriginY + Math.round(progress * 12);
+      this._otherPlayerDeathTimer--;
+      if (this._otherPlayerDeathTimer === 0) {
+        this._otherPlayerDead = true;
+      }
+    }
   }
+
+  setOtherPlayerDeath(isDead) {
+    if (isDead) {
+      if (!this._otherPlayerDead && this._otherPlayerDeathTimer <= 0) {
+        this._otherPlayerDeathTimer = 30;
+        this._deathOriginY = this.y;
+      }
+    } else {
+      this._otherPlayerDeathTimer = 0;
+      this._otherPlayerDead = false;
+      this.opacity = 255;
+      this.y = this._deathOriginY || this.y;
+    }
 
   screenX() {
     const tw = $gameMap.tileWidth();
