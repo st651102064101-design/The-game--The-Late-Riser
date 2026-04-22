@@ -59,18 +59,23 @@ function initializeMultiplayer(playerName = 'Player') {
  * When other player spawns
  */
 function onOtherPlayerSpawned(playerData) {
-  // Create sprite for other player
-  const sprite = new Sprite_Character(new Game_OtherPlayer(playerData));
-  sprite.setFrame(0, 0, ImageManager.iconWidth, ImageManager.iconHeight);
+  // Create character and sprite for other player
+  const character = new Game_OtherPlayer(playerData);
+  const sprite = new Sprite_Character(character);
   
-  if ($gameMap._displayObjects) {
-    $gameMap._displayObjects.push(sprite);
+  // Add to scene's spriteset
+  if (SceneManager._scene._spriteset && SceneManager._scene._spriteset._characterSprites) {
+    SceneManager._scene._spriteset._characterSprites.push(sprite);
+    SceneManager._scene._spriteset.addChild(sprite);
   }
   
   $otherPlayersSprites[playerData.playerId] = {
     sprite: sprite,
+    character: character,
     data: playerData
   };
+  
+  console.log(`👤 Other player spawned: ${playerData.name}`);
 }
 
 /**
@@ -79,10 +84,10 @@ function onOtherPlayerSpawned(playerData) {
 function onOtherPlayerMoved(moveData) {
   if ($otherPlayersSprites[moveData.playerId]) {
     const playerSprite = $otherPlayersSprites[moveData.playerId];
+    playerSprite.character._x = moveData.x;
+    playerSprite.character._y = moveData.y;
     playerSprite.data.x = moveData.x;
     playerSprite.data.y = moveData.y;
-    playerSprite.sprite._character._x = moveData.x;
-    playerSprite.sprite._character._y = moveData.y;
   }
 }
 
@@ -92,14 +97,17 @@ function onOtherPlayerMoved(moveData) {
 function onOtherPlayerDespawned(data) {
   if ($otherPlayersSprites[data.playerId]) {
     const playerSprite = $otherPlayersSprites[data.playerId];
+    
     // Remove sprite from display
     if (SceneManager._scene._spriteset && SceneManager._scene._spriteset._characterSprites) {
       const index = SceneManager._scene._spriteset._characterSprites.indexOf(playerSprite.sprite);
       if (index > -1) {
         SceneManager._scene._spriteset._characterSprites.splice(index, 1);
+        SceneManager._scene._spriteset.removeChild(playerSprite.sprite);
       }
     }
     delete $otherPlayersSprites[data.playerId];
+    console.log(`👤 Other player despawned: ${data.name}`);
   }
 }
 
@@ -108,7 +116,10 @@ function onOtherPlayerDespawned(data) {
  */
 function onPlayersUpdate(players) {
   players.forEach(player => {
-    onOtherPlayerSpawned(player);
+    // Only spawn if not already exists
+    if (!$otherPlayersSprites[player.playerId]) {
+      onOtherPlayerSpawned(player);
+    }
   });
 }
 
@@ -127,8 +138,15 @@ function onChatMessageReceived(chatData) {
 function onOtherPlayerStatsChanged(statsData) {
   if ($otherPlayersSprites[statsData.playerId]) {
     const playerData = $otherPlayersSprites[statsData.playerId].data;
+    const character = $otherPlayersSprites[statsData.playerId].character;
+    
     playerData.hp = statsData.hp;
     playerData.level = statsData.level;
+    
+    if (character) {
+      character._hp = statsData.hp;
+      character._level = statsData.level;
+    }
   }
 }
 
