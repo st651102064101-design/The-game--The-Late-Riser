@@ -1779,6 +1779,7 @@ Scene_Load.prototype.onLoadSuccess = function() {
     SoundManager.playLoad();
     this.fadeOutAll();
     this.reloadMapIfUpdated();
+    $gameTemp._multiplayerReinit = true;
     SceneManager.goto(Scene_Map);
     this._loadSuccess = true;
 };

@@ -292,6 +292,15 @@ const _Scene_Map_start = Scene_Map.prototype.start;
 Scene_Map.prototype.start = function() {
   _Scene_Map_start.call(this);
   
+  // Reinitialize after loading a save/restart if needed
+  if ($gameTemp && $gameTemp._multiplayerReinit) {
+    if ($multiplayer && $multiplayer.isConnected) {
+      $multiplayer.disconnect();
+    }
+    $multiplayer = null;
+    $gameTemp._multiplayerReinit = false;
+  }
+
   // Initialize multiplayer when entering map
   if (!$multiplayer || !$multiplayer.isConnected) {
     initializeMultiplayer($gameParty.leader().name() || 'Player')
