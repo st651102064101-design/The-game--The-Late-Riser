@@ -277,16 +277,17 @@ class Game_OtherPlayer extends Game_CharacterBase {
     const characterName = playerData.characterName || ($gamePlayer ? $gamePlayer.characterName() : '');
     const characterIndex = playerData.characterIndex || ($gamePlayer ? $gamePlayer.characterIndex() : 0);
     this.setImage(characterName, characterIndex);
-  this._otherPlayerDeathTimer = 0;
-  this._otherPlayerDead = false;
-  this._deathOriginY = 0;
-}
+    this._otherPlayerDeathTimer = 0;
+    this._otherPlayerDead = false;
+    this._deathOriginY = this._y;
+  }
 
   update() {
     super.update();
     if (this._otherPlayerDeathTimer > 0) {
       var progress = (30 - this._otherPlayerDeathTimer) / 30;
       this.opacity = 255 - Math.round(progress * 200);
+      this._deathOriginY = this._deathOriginY || this.y;
       this.y = this._deathOriginY + Math.round(progress * 12);
       this._otherPlayerDeathTimer--;
       if (this._otherPlayerDeathTimer === 0) {
@@ -305,7 +306,9 @@ class Game_OtherPlayer extends Game_CharacterBase {
       this._otherPlayerDeathTimer = 0;
       this._otherPlayerDead = false;
       this.opacity = 255;
-      this.y = this._deathOriginY || this.y;
+      if (this._deathOriginY !== undefined) {
+        this.y = this._deathOriginY;
+      }
     }
   }
 
