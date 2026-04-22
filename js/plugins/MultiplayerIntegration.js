@@ -7,6 +7,9 @@ if (typeof RPGMultiplayer === 'undefined') {
   throw new Error('RPGMultiplayer.js must be loaded before this plugin');
 }
 
+// Server configuration
+const SERVER_URL = 'https://the-game-the-late-riser-production.up.railway.app';
+
 // Initialize multiplayer
 let $multiplayer = null;
 
@@ -19,8 +22,8 @@ let $otherPlayersSprites = {};
 function initializeMultiplayer(playerName = 'Player') {
   return new Promise((resolve, reject) => {
     try {
-      // Get server URL (use Netlify environment variable if available)
-      const serverUrl = 'https://the-game-the-late-riser-production.up.railway.app';
+      // Get server URL from config
+      const serverUrl = SERVER_URL;
       
       // Generate unique player ID
       const playerId = localStorage.getItem('playerId') || generateUUID();
